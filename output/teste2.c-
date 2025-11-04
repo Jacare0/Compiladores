@@ -1,0 +1,67 @@
+/* Teste 2: Matrizes, Laços (while) e Operadores */
+
+int numeros[3];
+
+void main(void)
+{
+  int i;
+  int max;
+
+  i = 0;
+  
+  while (i < 3) 
+  {
+    numeros[i] = input();
+    i = i + 1;
+  }
+
+  max = numeros[0];
+  i = 1;
+  
+  while (i < 3)
+  {
+    if (numeros[i] > max)
+    {
+      max = numeros[i];
+    }
+    else
+    {
+       
+    }
+    i = i + 1;
+  }
+
+  output(max);
+
+}
+
+/* Area de teste para o SCANNER. */
+
+int matriz[10];
+int a;
+int b;
+
+a = 100 + 200 * 3;
+b = (a / 2) - 1;
+
+if (a >= b)
+{
+  
+}
+
+if (b <= 0)
+{
+  
+}
+
+if (a != b)
+{
+  
+}
+
+
+/* TESTES DE ERRO LÉXICO */
+
+int var1;
+int _var;
+a = b % 2;
