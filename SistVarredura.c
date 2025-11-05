@@ -1,15 +1,11 @@
-/*
- * scanner_c_menos.c
- * * Sistema de varredura (Analisador Léxico) para a linguagem C-
- * baseado nas especificações do Apêndice A (c_menos.pdf).
- */
-
+// SistVarredura.c
+// Implementação de um scanner (analisador léxico) simples em C
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
-// 1. DEFINIÇÃO DOS TIPOS DE MARCA (TOKEN TYPES)
+// DEFINIÇÃO DOS TIPOS DE TOKENS
 typedef enum {
     // Fim de arquivo
     T_EOF,
@@ -17,11 +13,11 @@ typedef enum {
     // Erro
     T_ERROR,
 
-    // Identificadores e Números [cite: 24]
+    // Identificadores e Números 
     T_ID,
     T_NUM,
 
-    // Palavras-chave [cite: 16, 17]
+    // Palavras-chave
     T_KW_ELSE,
     T_KW_IF,
     T_KW_INT,
@@ -29,7 +25,7 @@ typedef enum {
     T_KW_VOID,
     T_KW_WHILE,
 
-    // Símbolos Especiais (Operadores e Separadores) [cite: 20, 21, 22, 23]
+    // Símbolos Especiais (Operadores e Separadores)
     T_OP_MAIS,      // +
     T_OP_MENOS,     // -
     T_OP_MULT,      // *
@@ -52,17 +48,16 @@ typedef enum {
 
 } TokenType;
 
-// Estrutura para o Token (Marca)
+// Estrutura para o Token 
 typedef struct {
     TokenType type;
-    char lexeme[256]; // Buffer para armazenar a cadeia de caracteres
+    char lexeme[256];
 } Token;
 
-// Variável global para o arquivo de entrada
 FILE *inputFile;
-int lineno = 1; // Contador de linha (bom para depuração)
+int lineno = 1; 
 
-// Função auxiliar para converter o Tipo de Token em string (para exibição)
+// Função auxiliar para converter o Tipo de Token em string
 const char* tokenTypeToString(TokenType type) {
     switch (type) {
         case T_EOF: return "EOF";
@@ -102,51 +97,49 @@ const char* tokenTypeToString(TokenType type) {
 }
 
 
-// 2. A LÓGICA CENTRAL: getToken()
-// Esta é a função principal do scanner.
+// Função prinicipal do scanner
 Token getToken() {
     Token token;
     int lexemeIndex = 0;
     int c;
 
-    // Inicializa o lexema como vazio
     token.lexeme[0] = '\0';
 
-    // 2.1. Pular espaços em branco (brancos, mudanças de linha, tabulações) [cite: 35]
+    // pula espaços em branco
     while (isspace(c = fgetc(inputFile))) {
         if (c == '\n') {
             lineno++;
         }
     }
 
-    // 2.2. Lógica de Comentários (/*...*/) e Divisão (/)
+    // logica de comentarios e divisao
     if (c == '/') {
         int next_c = fgetc(inputFile);
         
-        if (next_c == '*') { // Início de um comentário de bloco 
+        if (next_c == '*') { 
             c = fgetc(inputFile);
             while (c != EOF) {
                 if (c == '*') {
                     int next_next_c = fgetc(inputFile);
                     if (next_next_c == '/') {
-                        break; // Fim do comentário de bloco
+                        break; 
                     }
                     ungetc(next_next_c, inputFile); // Devolve o caractere
                 }
-                if (c == '\n') lineno++; // Continua contando linhas dentro do comentário
+                if (c == '\n') lineno++; 
                 c = fgetc(inputFile);
             }
             
-            if (c == EOF) { // Comentário não terminado
+            if (c == EOF) {
                 token.type = T_ERROR;
                 strcpy(token.lexeme, "Comentario nao terminado");
                 return token;
             }
             
-            return getToken(); // Chama recursivamente para pegar o *próximo* token
+            return getToken(); // Chama recursivamente para partir para o próximo token
 
         } else {
-            // É apenas um operador de divisão [cite: 23]
+            // É apenas um operador de divisão!!
             ungetc(next_c, inputFile); // Devolve o caractere lido a mais
             token.type = T_OP_DIV;
             token.lexeme[0] = c;
@@ -155,20 +148,18 @@ Token getToken() {
         }
     }
 
-    // 2.3. Fim de Arquivo (EOF)
+    // Fim de Arquivo (EOF)
     if (c == EOF) {
         token.type = T_EOF;
         strcpy(token.lexeme, "EOF");
         return token;
     }
 
-    // 2.4. Identificadores (ID) e Palavras-Chave
-    // REGRA: ID = letra letra* 
-    // letra = a...z | A...Z [cite: 28]
-    if (isalpha(c)) { // isalpha() checa se c é uma 'letra' [cite: 28]
+    // Identificadores (ID) e Palavras-Chaves
+    if (isalpha(c)) { // checa se c é uma 'letra'
         token.lexeme[lexemeIndex++] = c;
         
-        // Loop enquanto for 'letra' 
+        // enquanto for 'letra' 
         while (isalpha(c = fgetc(inputFile))) { 
             token.lexeme[lexemeIndex++] = c;
         }
@@ -187,12 +178,10 @@ Token getToken() {
         return token;
     }
 
-    // 2.5. Números (NUM)
-    // REGRA: NUM = dígito dígito* [cite: 27]
-    // dígito = 0...9 [cite: 29]
-    if (isdigit(c)) { // isdigit() checa se c é um 'dígito' [cite: 29]
+    // Números (NUM)
+    if (isdigit(c)) { // checa se c é um 'dígito'
         token.lexeme[lexemeIndex++] = c;
-        // Loop enquanto for 'dígito' [cite: 27]
+        // enquanto for 'dígito'
         while (isdigit(c = fgetc(inputFile))) {
             token.lexeme[lexemeIndex++] = c;
         }
@@ -202,7 +191,7 @@ Token getToken() {
         return token;
     }
 
-    // 2.6. Operadores (com "lookahead" para ==, !=, <=, >=) [cite: 22]
+    // Operadores (com "lookahead" para ==, !=, <=, >=) 
     token.lexeme[lexemeIndex++] = c;
     token.lexeme[lexemeIndex] = '\0';
 
@@ -259,12 +248,11 @@ Token getToken() {
         return token;
     }
 
-    // 2.7. Operadores e Separadores Simples (um caractere) 
+    // Operadores e Separadores Simples (um caractere) 
     switch (c) {
         case '+': token.type = T_OP_MAIS; break;
         case '-': token.type = T_OP_MENOS; break;
         case '*': token.type = T_OP_MULT; break;
-        // (Divisão já foi tratada acima)
         case '(': token.type = T_SEP_LPAREN; break;
         case ')': token.type = T_SEP_RPAREN; break;
         case '{': token.type = T_SEP_LCHAVE; break;
@@ -274,7 +262,7 @@ Token getToken() {
         case ',': token.type = T_SEP_VIRGULA; break;
         case ';': token.type = T_SEP_PVIRGULA; break;
         default:
-            // 2.8. Caractere desconhecido
+            // Caractere desconhecido
             token.type = T_ERROR;
             sprintf(token.lexeme, "Caractere '%c' desconhecido", c);
             break;
@@ -284,10 +272,11 @@ Token getToken() {
 }
 
 
-// 3. O PROGRAMA PRINCIPAL (main)
+// Função principal
 int main(int argc, char *argv[]) {
     
     // Verifica se o nome do arquivo foi passado como argumento
+    // caso contrário, exibe mensagem de erro, já que sem arquivo não tem varredura
     if (argc < 2) {
         fprintf(stderr, "Erro: Forneca um arquivo de entrada.\n");
         fprintf(stderr, "Uso: %s <arquivo.c->\n", argv[0]);
@@ -321,7 +310,7 @@ int main(int argc, char *argv[]) {
              fprintf(stderr, "Erro lexico na linha %d: %s\n", lineno, currentToken.lexeme);
         }
 
-    } while (currentToken.type != T_EOF); // Loop até o fim do arquivo
+    } while (currentToken.type != T_EOF); // Loop até acabar o arquivo
 
     printf("---------------------------------------------\n");
     printf("Varredura concluida.\n");
